@@ -1,4 +1,22 @@
-﻿using System;
+﻿/* ************************************************************************
+Practica 07
+Integrantes: Jose Condor, Kevin Perez  
+Fecha de realización: 11 / 06 / 2025
+Fecha de entrega: 18 / 06 / 2025
+
+RESULTADOS:
+-Se implementó un servidor TCP multicliente usando `TcpListener` y `Thread` para manejar múltiples clientes concurrentemente.
+
+CONCLUSIONES:  
+1.El uso de hilos permite manejar múltiples clientes simultáneamente sin bloquear el servidor.
+2. El diseño de un protocolo propio brinda flexibilidad en la comunicación entre cliente y servidor.
+
+RECOMENDACIONES:  
+1.Implementar autenticación más robusta para producción (evitar credenciales planas).
+2. Controlar adecuadamente excepciones por cliente desconectado para evitar caídas.
+
+************************************************************************ */
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,10 +29,13 @@ namespace Servidor
 {
     class Servidor
     {
+        // Escuchador TCP para aceptar clientes
         private static TcpListener escuchador;
+        // Diccionario que lleva un conteo por cliente conectado (por dirección)
         private static Dictionary<string, int> listadoClientes
             = new Dictionary<string, int>();
 
+        // Método principal: inicia el servidor, escucha conexiones entrantes y lanza un hilo por cliente
         static void Main(string[] args)
         {
             try
@@ -27,6 +48,8 @@ namespace Servidor
                 {
                     TcpClient cliente = escuchador.AcceptTcpClient();
                     Console.WriteLine("Cliente conectado, puerto: {0}", cliente.Client.RemoteEndPoint.ToString());
+
+                    // Lanza un nuevo hilo para atender a este cliente de forma concurrente
                     Thread hiloCliente = new Thread(ManipuladorCliente);
                     hiloCliente.Start(cliente);
                 }
@@ -42,6 +65,7 @@ namespace Servidor
             }
         }
 
+        // Método que maneja la comunicación con un cliente individual
         private static void ManipuladorCliente(object obj)
         {
             TcpClient cliente = (TcpClient)obj;
@@ -81,6 +105,7 @@ namespace Servidor
             }
         }
 
+        // Método que resuelve los comandos enviados por el cliente
         private static Respuesta ResolverPedido(Pedido pedido, string direccionCliente)
         {
             Respuesta respuesta = new Respuesta
@@ -108,6 +133,7 @@ namespace Servidor
                     break;
 
                 case "CALCULO":
+                    // Verifica y calcula el día de restricción por placa
                     if (pedido.Parametros.Length == 3)
                     {
                         string modelo = pedido.Parametros[0];
@@ -129,6 +155,7 @@ namespace Servidor
                     break;
 
                 case "CONTADOR":
+                    // Devuelve el número de solicitudes de ese cliente
                     if (listadoClientes.ContainsKey(direccionCliente))
                     {
                         respuesta = new Respuesta
@@ -145,11 +172,13 @@ namespace Servidor
             return respuesta;
         }
 
+        // Método que valida el formato de una placa (3 letras + 4 dígitos)
         private static bool ValidarPlaca(string placa)
         {
             return Regex.IsMatch(placa, @"^[A-Z]{3}[0-9]{4}$");
         }
 
+        // Método que determina el día de restricción por el último dígito de la placa
         private static byte ObtenerIndicadorDia(string placa)
         {
             int ultimoDigito = int.Parse(placa.Substring(6, 1));
@@ -175,6 +204,7 @@ namespace Servidor
             }
         }
 
+        // Método que registra el número de veces que un cliente ha hecho solicitudes
         private static void ContadorCliente(string direccionCliente)
         {
             if (listadoClientes.ContainsKey(direccionCliente))

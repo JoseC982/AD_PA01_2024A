@@ -1,4 +1,24 @@
-﻿using System;
+﻿/* ************************************************************************
+Practica 07  
+Integrantes: Jose Condor, Kevin Perez  
+Fecha de realización: 11 / 06 / 2025  
+Fecha de entrega: 18 / 06 / 2025  
+
+RESULTADOS:  
+- Se implementó correctamente la interacción cliente-servidor usando TCP, manejando múltiples solicitudes de los usuarios.
+- Se garantizó la seguridad en el proceso de conexión, validando usuario y contraseña correctamente.
+- El flujo de datos entre cliente y servidor se gestionó adecuadamente, permitiendo la consulta de modelos, marcas y placas.
+
+CONCLUSIONES:  
+1. La implementación del protocolo TCP fue exitosa, permitiendo comunicación efectiva entre el cliente y el servidor.
+2. El manejo adecuado de excepciones y el uso de clases para la estructura de los mensajes permitió una mejor organización del código y mayor facilidad de mantenimiento.
+
+RECOMENDACIONES:  
+1. Es recomendable utilizar un manejo de errores más detallado para manejar diferentes tipos de excepciones, especialmente las relacionadas con la red.
+2. Se puede mejorar la gestión de la conexión al servidor para evitar cerrarla prematuramente y garantizar que el flujo de datos esté abierto durante todas las operaciones.
+
+************************************************************************ */
+using System;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -29,11 +49,11 @@ namespace Cliente
                 MessageBox.Show("No se puedo establecer conexión " + ex.Message,
                     "ERROR");
             }
-            finally 
+            /*finally 
             {
                 flujo?.Close();
                 remoto?.Close();
-            }
+            }*/
 
             panPlaca.Enabled = false;
             chkLunes.Enabled = false;
@@ -88,7 +108,7 @@ namespace Cliente
 
         private Respuesta HazOperacion(Pedido pedido)
         {
-            if(flujo == null)
+            if (flujo == null)
             {
                 MessageBox.Show("No hay conexión", "ERROR");
                 return null;
@@ -97,17 +117,17 @@ namespace Cliente
             {
                 byte[] bufferTx = Encoding.UTF8.GetBytes(
                     pedido.Comando + " " + string.Join(" ", pedido.Parametros));
-                
+
                 flujo.Write(bufferTx, 0, bufferTx.Length);
 
                 byte[] bufferRx = new byte[1024];
-                
+
                 int bytesRx = flujo.Read(bufferRx, 0, bufferRx.Length);
-                
+
                 string mensaje = Encoding.UTF8.GetString(bufferRx, 0, bytesRx);
-                
+
                 var partes = mensaje.Split(' ');
-                
+
                 return new Respuesta
                 {
                     Estado = partes[0],
@@ -119,11 +139,11 @@ namespace Cliente
                 MessageBox.Show("Error al intentar transmitir " + ex.Message,
                     "ERROR");
             }
-            finally 
+            /*finally 
             {
                 flujo?.Close();
                 remoto?.Close();
-            }
+            }*/
             return null;
         }
 
